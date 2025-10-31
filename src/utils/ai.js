@@ -1,9 +1,9 @@
 export async function adaptResumeToJob(baseResume, options) {
-  const { targetLanguage, apiKey } = options;
+  const { targetLanguage, apiKey, jobTitle, jobDescription, companyName } = options;
 
   if (apiKey && typeof fetch !== "undefined") {
     try {
-      const prompt = buildPrompt(baseResume, targetLanguage);
+      const prompt = buildEnhancedPrompt(baseResume, targetLanguage, jobTitle, jobDescription, companyName);
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -13,21 +13,36 @@ export async function adaptResumeToJob(baseResume, options) {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system", content: "You are an expert resume writer." },
+            { 
+              role: "system", 
+              content: "You are an expert ATS optimization specialist and resume writer with deep knowledge of recruitment processes. Your goal is to perfectly tailor resumes to specific job descriptions to maximize interview chances." 
+            },
             { role: "user", content: prompt },
           ],
-          temperature: 0.3,
+          temperature: 0.2,
         }),
       });
       const json = await response.json();
       const content = json?.choices?.[0]?.message?.content ?? "";
       const adapted = parseAdaptedResume(content, baseResume);
-      return { ...adapted, cvLanguage: targetLanguage, updatedAt: new Date().toISOString() };
-    } catch {
-      return heuristicAdapt(baseResume, targetLanguage);
+      
+      // Adaugă informații despre job și companie în CV-ul adaptat
+      const enhancedResume = {
+        ...adapted,
+        cvLanguage: targetLanguage,
+        jobTitle: jobTitle || baseResume.jobTitle,
+        company: companyName || baseResume.company,
+        jobDescription: jobDescription || baseResume.jobDescription,
+        updatedAt: new Date().toISOString()
+      };
+      
+      return enhancedResume;
+    } catch (error) {
+      console.error("Error adapting resume:", error);
+      return enhancedHeuristicAdapt(baseResume, targetLanguage, jobTitle, jobDescription, companyName);
     }
   }
-  return heuristicAdapt(baseResume, targetLanguage);
+  return enhancedHeuristicAdapt(baseResume, targetLanguage, jobTitle, jobDescription, companyName);
 }
 
 export async function generateCoverLetter(baseResume, options) {
@@ -83,15 +98,27 @@ function heuristicLetter(resume, { targetLanguage, recipientName, companyName, j
   return targetLanguage === "en" ? bodyEn : targetLanguage === "it" ? bodyIt : bodyRo;
 }
 
-function buildPrompt(resume, lang) {
+function buildEnhancedPrompt(resume, lang, jobTitle, jobDescription, companyName) {
   const label = { ro: "Romanian", en: "English", it: "Italian" }[lang] || "English";
+  
   return [
-    `Transform the following resume to be targeted for the job below, in ${label}.`,
-    `Preserve structure: name, role, summary, contact, work experience (with bullets), academic, certifications, skills, driver license, languages, other.`,
-    `Return ONLY JSON with same keys as the input resume object.`,
+    `Transform the following resume to be perfectly tailored for the specific job described below, in ${label}.`,
+    `Your goal is to maximize the candidate's chances of passing ATS systems and being called for an interview.`,
+    `Follow these expert guidelines:`,
+    `1. Identify and incorporate ALL key skills, technologies, and qualifications from the job description`,
+    `2. Reorganize work experience to highlight the most relevant achievements for this specific role`,
+    `3. Use industry-specific terminology that matches the job description exactly`,
+    `4. Quantify achievements with metrics and numbers wherever possible`,
+    `5. Ensure the professional summary directly addresses the job requirements`,
+    `6. Maintain the same structure but optimize every section for ATS compatibility`,
+    `7. Preserve all contact information and personal details`,
+    `Return ONLY JSON with the same keys as the input resume object.`,
     `--- Resume JSON ---`,
     JSON.stringify(resume),
-    `--- End Resume JSON ---`,
+    `--- Job Details ---`,
+    `Job Title: ${jobTitle || 'Not specified'}`,
+    `Company: ${companyName || 'Not specified'}`,
+    `Job Description: ${jobDescription || 'Not provided'}`,
   ].join("\n");
 }
 
@@ -107,50 +134,147 @@ function parseAdaptedResume(content, fallback) {
   return fallback;
 }
 
-function heuristicAdapt(resume, lang) {
-  const jd = `${resume.jobTitle} ${resume.jobDescription}`.toLowerCase();
-  const emphasize = (text) => {
+function enhancedHeuristicAdapt(resume, lang, jobTitle, jobDescription, companyName) {
+  const jd = `${jobTitle || resume.jobTitle || ""} ${jobDescription || resume.jobDescription || ""}`.toLowerCase();
+  
+  // Extrage cuvinte cheie îmbunătățite
+  const keywords = extractEnhancedKeywords(jd, 20);
+  
+  // Funcție pentru evidențierea și adaptarea textului
+  const enhanceText = (text) => {
     if (!text) return text;
     let t = text;
-    const keywords = extractKeywords(jd);
+    
+    // Evidențiază cuvintele cheie
     for (const kw of keywords) {
       const re = new RegExp(`(\\\b${escapeRegExp(kw)}\\\b)`, "ig");
       t = t.replace(re, (m) => m.toUpperCase());
     }
+    
+    // Adaugă termeni specifici jobului dacă nu există deja
+    if (jobTitle && !t.toLowerCase().includes(jobTitle.toLowerCase())) {
+      t = `${t} Experiență relevantă pentru poziția de ${jobTitle}.`;
+    }
+    
     return t;
+  };
+
+  // Reorganizează experiența de muncă în funcție de relevanță
+  const reorganizeExperience = (experiences) => {
+    if (!experiences || experiences.length <= 1) return experiences;
+    
+    return [...experiences].sort((a, b) => {
+      const aRelevance = calculateRelevance(a, keywords);
+      const bRelevance = calculateRelevance(b, keywords);
+      return bRelevance - aRelevance;
+    });
+  };
+  
+  // Calculează relevanța unei experiențe pentru jobul curent
+  const calculateRelevance = (exp, keywords) => {
+    const expText = `${exp.role || ""} ${exp.company || ""} ${exp.description || ""}`.toLowerCase();
+    return keywords.reduce((score, kw) => {
+      return score + (expText.includes(kw.toLowerCase()) ? 1 : 0);
+    }, 0);
   };
 
   return {
     ...resume,
     cvLanguage: lang,
-    professionalSummary: emphasize(resume.professionalSummary),
-    workExperience: (resume.workExperience || []).map((w) => ({ ...w, description: emphasize(w.description) })),
-    skills: mergeWithJobKeywords(resume.skills || [], jd),
+    jobTitle: jobTitle || resume.jobTitle,
+    company: companyName || resume.company,
+    jobDescription: jobDescription || resume.jobDescription,
+    professionalSummary: enhanceText(resume.professionalSummary),
+    workExperience: reorganizeExperience((resume.workExperience || []).map(w => ({ 
+      ...w, 
+      description: enhanceText(w.description),
+      bullets: (w.bullets || []).map(bullet => enhanceText(bullet))
+    }))),
+    skills: prioritizeSkillsByKeywords(resume.skills || [], keywords, jd),
     updatedAt: new Date().toISOString(),
   };
 }
 
-function extractKeywords(text) {
-  const words = (text.match(/[a-zA-Z][a-zA-Z+.#-]{2,}/g) || []).map((w) => w.toLowerCase());
-  const stop = new Set(["and", "the", "with", "for", "using", "from", "this", "that", "you"]);
-  const freq = {};
-  for (const w of words) {
-    if (stop.has(w)) continue;
-    freq[w] = (freq[w] || 0) + 1;
+function extractEnhancedKeywords(text, limit = 15) {
+  if (!text) return [];
+  
+  // Elimină cuvintele comune și simbolurile
+  const cleanText = text.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ');
+  
+  // Lista de cuvinte de oprit (stopwords)
+  const stopWords = new Set([
+    "and", "the", "with", "for", "using", "from", "this", "that", "you", "are", "your", "will", 
+    "have", "been", "being", "our", "their", "them", "they", "about", "after", "all", "also", 
+    "can", "com", "more", "most", "other", "some", "such", "than", "then", "there", "these", 
+    "they", "this", "those", "what", "when", "where", "which", "who", "will", "would", "www"
+  ]);
+  
+  // Extrage cuvintele și frazele
+  const words = cleanText.match(/\b[a-z][a-z+.#0-9-]{2,}\b/g) || [];
+  const phrases = extractPhrases(cleanText);
+  
+  // Calculează frecvența cuvintelor
+  const wordFreq = {};
+  for (const word of words) {
+    if (!stopWords.has(word)) {
+      wordFreq[word] = (wordFreq[word] || 0) + 1;
+    }
   }
-  return Object.entries(freq)
+  
+  // Adaugă frazele importante
+  for (const phrase of phrases) {
+    if (phrase.length > 3) {
+      wordFreq[phrase] = (wordFreq[phrase] || 0) + 3; // Prioritizează frazele
+    }
+  }
+  
+  // Sortează după frecvență și returnează cele mai importante cuvinte/fraze
+  return Object.entries(wordFreq)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 12)
-    .map(([w]) => w);
+    .slice(0, limit)
+    .map(([word]) => word);
 }
 
-function mergeWithJobKeywords(skills, jd) {
-  const kws = extractKeywords(jd);
-  const set = new Set(skills.map((s) => s.toLowerCase()));
-  for (const k of kws) {
-    if (!set.has(k)) skills = [...skills, capitalize(k)];
+function extractPhrases(text) {
+  const phrases = [];
+  
+  // Extrage fraze tehnice comune
+  const technicalPhrases = [
+    /\b(machine learning|deep learning|artificial intelligence|data science|big data|cloud computing|web development|full stack|front end|back end|devops|ci cd|test driven development|agile methodology|scrum master|product owner|user experience|user interface|responsive design|mobile first|cross platform|restful api|microservices|serverless architecture|blockchain technology|internet of things|augmented reality|virtual reality|software engineering|project management|business intelligence|data analytics|data visualization|natural language processing|computer vision|neural networks|version control|git workflow|database management|sql server|no sql|aws services|azure cloud|google cloud|docker containers|kubernetes orchestration|continuous integration|continuous deployment|test automation|quality assurance|security testing|penetration testing|performance optimization|scalable solutions|distributed systems|object oriented programming|functional programming|reactive programming|design patterns|software architecture|system design|api integration|third party integration|payment processing|authentication authorization|single sign on|oauth implementation|jwt tokens|real time processing|batch processing|data migration|legacy system integration|mobile development|progressive web apps|native applications|hybrid applications|cross browser compatibility|accessibility compliance|internationalization|localization|content management|digital marketing|search engine optimization|conversion rate optimization|a b testing|user research|customer journey|wireframing prototyping|information architecture|content strategy|brand identity|visual design|interaction design|motion design|voice user interface|chatbot development|robotic process automation|predictive analytics|prescriptive analytics|data mining|etl processes|data warehousing|business process management|enterprise resource planning|customer relationship management|supply chain management|human resources management|financial management|risk management|compliance management|change management|stakeholder management|portfolio management|program management)\b/gi
+  ];
+  
+  for (const pattern of technicalPhrases) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      phrases.push(match[1].toLowerCase());
+    }
   }
-  return Array.from(new Set(skills));
+  
+  return phrases;
+}
+
+function prioritizeSkillsByKeywords(skills, keywords, jobDescription) {
+  if (!skills || skills.length === 0) return [];
+  if (!keywords || keywords.length === 0) return skills;
+  
+  // Adaugă cuvinte cheie din descrierea jobului ca skills dacă nu există deja
+  const skillsSet = new Set(skills.map(s => s.toLowerCase()));
+  const enhancedSkills = [...skills];
+  
+  for (const kw of keywords) {
+    if (!skillsSet.has(kw.toLowerCase())) {
+      enhancedSkills.push(capitalize(kw));
+    }
+  }
+  
+  // Sortează skills în funcție de relevanța pentru job
+  return enhancedSkills.sort((a, b) => {
+    const aRelevance = keywords.some(kw => a.toLowerCase().includes(kw.toLowerCase())) ? 1 : 0;
+    const bRelevance = keywords.some(kw => b.toLowerCase().includes(kw.toLowerCase())) ? 1 : 0;
+    return bRelevance - aRelevance;
+  });
 }
 
 function capitalize(s) {
@@ -161,16 +285,19 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function computeMatchScore(resume) {
+export function computeMatchScore(resume, jobTitle, jobDescription, companyName) {
   try {
-    const jd = `${resume.jobTitle || ""} ${resume.jobDescription || ""}`.toLowerCase();
-    const jdKws = new Set(extractKeywords(jd));
+    const jd = `${jobTitle || resume.jobTitle || ""} ${jobDescription || resume.jobDescription || ""} ${companyName || resume.company || ""}`.toLowerCase();
+    const jdKws = new Set(extractEnhancedKeywords(jd, 20));
+    
+    // Extrage text din CV pentru analiză
     const text = [
       resume.professionalSummary || "",
       (resume.skills || []).join(" "),
-      ...(resume.workExperience || []).map((w) => `${w.role} ${w.company} ${w.description || ""}`),
+      ...(resume.workExperience || []).map((w) => `${w.role} ${w.company} ${w.description || ""} ${(w.bullets || []).join(" ")}`),
     ].join(" ").toLowerCase();
-    const cvKws = new Set(extractKeywords(text));
+    
+    const cvKws = new Set(extractEnhancedKeywords(text, 20));
     
     // Calculează suprapunerea cuvintelor cheie
     let overlap = 0;
@@ -229,18 +356,26 @@ export function computeMatchScore(resume) {
         keywordMatch: {
           score: keywordScore,
           matched: matchedKeywords,
-          missing: missingKeywords
+          missing: missingKeywords,
+          weight: 40,
+          label: "Potrivire cuvinte cheie"
         },
         completeness: {
           score: completenessScore,
-          missingFields: missingFields
+          missingFields: missingFields,
+          weight: 20,
+          label: "Completitudine CV"
         },
         workExperience: {
-          score: workExpScore
+          score: workExpScore,
+          weight: 25,
+          label: "Calitatea experienței"
         },
         skills: {
           score: skillScore,
-          count: (resume.skills || []).length
+          count: (resume.skills || []).length,
+          weight: 15,
+          label: "Relevanța competențelor"
         }
       }
     };
@@ -249,10 +384,10 @@ export function computeMatchScore(resume) {
     return {
       total: 0,
       details: {
-        keywordMatch: { score: 0, matched: [], missing: [] },
-        completeness: { score: 0, missingFields: [] },
-        workExperience: { score: 0 },
-        skills: { score: 0, count: 0 }
+        keywordMatch: { score: 0, matched: [], missing: [], weight: 40, label: "Potrivire cuvinte cheie" },
+        completeness: { score: 0, missingFields: [], weight: 20, label: "Completitudine CV" },
+        workExperience: { score: 0, weight: 25, label: "Calitatea experienței" },
+        skills: { score: 0, count: 0, weight: 15, label: "Relevanța competențelor" }
       }
     };
   }
