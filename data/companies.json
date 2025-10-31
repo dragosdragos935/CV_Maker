@@ -1,0 +1,153 @@
+[
+  {
+    "id": "02192c61-1277-4fb9-b522-f62b611b021e",
+    "name": "Contrader",
+    "address": {
+      "country": "Italy",
+      "region": "Italy",
+      "county": "Italy",
+      "city": "Italy",
+      "street": ""
+    },
+    "contacts": [],
+    "resumes": [
+      {
+        "id": "20031c89-6cfd-4027-af66-52b940274f0d",
+        "createdAt": "2025-10-31T11:21:42.721Z",
+        "language": "it",
+        "type": "cv",
+        "data": {
+          "id": "66133364-7b9c-42fb-acbe-ccf35ca2231b",
+          "createdAt": "2025-10-31T11:16:26.078Z",
+          "updatedAt": "2025-10-31T11:21:42.185Z",
+          "company": "Enginium",
+          "recipients": [
+            "Alessandra Cascoschi"
+          ],
+          "jobTitle": "Control Engineer",
+          "jobDescription": "About the job\nSiamo alla ricerca di un Dynamic Control Engineer da inserire in un team altamente specializzato, dedicato allo sviluppo e all’ottimizzazione dei sistemi dinamici di veicoli ad alte prestazioni. La risorsa contribuirà alla progettazione e calibrazione dei controlli dinamici, con un focus su maneggevolezza, stabilità e performance.\n\n\nWhat are we looking for?\n\nlaurea in Ingegneria del Veicolo/Meccanica e/o percorsi similari;\nConoscenza di MATLAB, Simulink e linguaggio C;\nInteresse per la modellazione e il controllo di sistemi meccanici;\nCapacità di lavorare in team e di affrontare problemi complessi con approccio analitico;\nConoscenza della lingua inglese;\n\n\nHow can you make the difference with us?\n\nPredisposizione al lavoro in team e ottima capacità di analisi e problem solving;\nProattività, energia e forte orientamento ai risultati;\nBuona conoscenza della lingua inglese scritta e parlata.\n\n\nWhat we offer:\n\nUn piano di crescita professionale in un ambiente di lavoro dinamico e in crescita;\nFollow up costanti con il dipartimento HR e di Business;\nStrumenti di formazione per le tue hard e soft skills;\nE’ previsto un programma di Welfare aziendale dedicato ai dipendenti del gruppo;\nPiattaforma wellhub;\nContratto a tempo indeterminato.\n\n\nPortaci la tua curiosità insieme al desiderio di sfidare la quotidianità e noi ti offriremo la responsabilità che cerchi.\n\n\n\nMake the difference with us!\n\n\nWhere?\n\n\n\nSant'Agata (BO)\n\n\n\nContacts:\n\n\nI candidati ambosessi (D.lgs n. 198/2006) sono invitati a leggere l’informativa privacy ai sensi degli artt. 13 e 14 del Reg. EU 679/2016 al seguente indirizzo: https://www.enginium.eu/entra-nel-team/privacy-candidati/.",
+          "jobUrl": "https://www.linkedin.com/jobs/collections/recommended/?currentJobId=4299571037&discover=recommended&discoveryOrigin=JOBS_HOME_JYMBII",
+          "cvLanguage": "it",
+          "name": "Matei Dragos",
+          "role": "Software Engineer",
+          "professionalSummary": "Junior Software Engineer specializing in C# with additional expertise in C/C++ and Python. Proficient in modern web\ndevelopment technologies, including JavaScript, React, Next.js, HTML, and CSS, with strong version control skills using\nGit. Experienced in working with SQL, MySQL, and MongoDB databases for data management, querying, and\noptimization. Adept at writing clean, efficient, and maintainable code, diagnosing and debugging complex issues, and\napplying analytical thinking to deliver precise, effective solutions. Creative and adaptable, with a passion for addressing\nreal-world software challenges and contributing to the development of high-quality, innovative applications.",
+          "contact": {
+            "email": "dragosdragos935@gmail.com",
+            "phone": "00393445056808",
+            "location": "Bologna",
+            "linkedin": "www.linkedin.com/in/matei-dragos-catalin",
+            "website": "",
+            "github": "https://github.com/dragosdragos935"
+          },
+          "workExperience": [],
+          "academicHistory": [],
+          "certifications": [],
+          "skills": [
+            "Programming Languages: C#",
+            "C/C++",
+            "Python",
+            "JavaScript (ES6+)",
+            "SQL",
+            "Bash/Shell scripting",
+            "PHP Frameworks and Libraries: React",
+            "Next.js",
+            ".NET Core",
+            "Node.js",
+            "Express.js",
+            "Bootstrap",
+            "Tailwind CSS",
+            "Entity Framework",
+            "Django",
+            "jQuery Frontend: HTML5",
+            "CSS3",
+            "Responsive Design",
+            "Sass/SCSS",
+            "Webpack Databases: MySQL",
+            "PostgreSQL",
+            "MongoDB",
+            "SQLite Version Control: Git",
+            "GitHub",
+            "GitLab Other Technologies & Concepts: RESTful APIs",
+            "Debugging",
+            "Agile/Scrum methodologies",
+            "Unit Testing",
+            "Object-Oriented Programming (OOP)",
+            "Functional Programming basics",
+            "CI/CD pipelines",
+            "Microservices architecture basics",
+            "command-line Soft Skills: Analytical thinking",
+            "Problem-solving",
+            "Creativity",
+            "Adaptability",
+            "Teamwork",
+            "Effective communication",
+            "Time management",
+            "Self-learning",
+            "Team",
+            "Con",
+            "Del",
+            "Conoscenza",
+            "Control",
+            "Engineer",
+            "Alla",
+            "Dedicato",
+            "Dei",
+            "Sistemi",
+            "Dinamici",
+            "What"
+          ],
+          "driverLicense": "B",
+          "languages": [],
+          "other": ""
+        }
+      }
+    ]
+  },
+  {
+    "id": "d057684b-79fc-42b4-ba12-ce0c6693173b",
+    "name": "test",
+    "contacts": [],
+    "resumes": [
+      {
+        "id": "aec1227b-3965-4e39-8a73-d7f6ae2bb26a",
+        "createdAt": "2025-10-31T11:15:36.770Z",
+        "language": "ro",
+        "type": "cv",
+        "data": {
+          "id": "6e68e463-2670-4ea5-9fe4-05d30b002327",
+          "createdAt": "2025-10-31T11:14:02.118Z",
+          "updatedAt": "2025-10-31T11:15:36.411Z",
+          "company": "Hella",
+          "recipients": [
+            "Alex"
+          ],
+          "jobTitle": "Software Developer",
+          "jobDescription": "",
+          "jobUrl": "",
+          "cvLanguage": "ro",
+          "name": "",
+          "role": "",
+          "professionalSummary": "",
+          "contact": {
+            "email": "",
+            "phone": "",
+            "location": "",
+            "linkedin": "",
+            "website": "",
+            "github": ""
+          },
+          "workExperience": [],
+          "academicHistory": [],
+          "certifications": [],
+          "skills": [
+            "Software",
+            "Developer"
+          ],
+          "driverLicense": "",
+          "languages": [],
+          "other": ""
+        }
+      }
+    ]
+  }
+]
